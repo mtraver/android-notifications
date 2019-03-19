@@ -1,20 +1,28 @@
 package com.example.notificationscheduler;
 
 import android.annotation.TargetApi;
+import android.app.AlarmManager;
+import android.app.Notification;
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
+import android.support.v4.app.NotificationCompat;
 import android.support.v7.app.ActionBar;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
 import android.view.MenuItem;
 
 import java.util.List;
+
+import static com.example.notificationscheduler.NotificationSchedulerApplication.CHANNEL_ID;
 
 /**
  * A {@link PreferenceActivity} that presents a set of application settings. On
@@ -27,7 +35,9 @@ import java.util.List;
  * href="http://developer.android.com/guide/topics/ui/settings.html">Settings
  * API Guide</a> for more information on developing a Settings UI.
  */
-public class SettingsActivity extends AppCompatPreferenceActivity {
+public class SettingsActivity extends AppCompatPreferenceActivity implements SharedPreferences.OnSharedPreferenceChangeListener {
+
+    private static final String ENABLE_NOTIFICATIONS_PREF_KEY = "notifications_enable";
 
     /**
      * A preference value change listener that updates the preference's summary
@@ -93,6 +103,65 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setupActionBar();
+
+        // Listen for changes to any preferences.
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        prefs.registerOnSharedPreferenceChangeListener(this);
+    }
+
+    @Override
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String s) {
+        // We only want to take action if this particular preference changes.
+        if (!s.equals(ENABLE_NOTIFICATIONS_PREF_KEY)) {
+            return;
+        }
+
+        // Build a notification, add it to the intent we'll schedule, and schedule it.
+//        Notification notification = buildNotification();
+//        scheduleNotification(notification, 5000);
+
+        // Schedule an intent, and build and publish the notification in the future whenever
+        // the intent is received.
+        scheduleNotification(5000);
+    }
+
+    private Notification buildNotification() {
+        Intent intent = new Intent(this, com.example.notificationscheduler.MainActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, 0);
+
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
+                .setSmallIcon(R.drawable.ic_launcher_foreground)
+                .setContentTitle("Hello I'm a notification!")
+                .setContentText("Well look at that, it's content")
+                .setContentIntent(pendingIntent)
+                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                .setAutoCancel(true);
+
+        return builder.build();
+    }
+
+    private void scheduleNotification(Notification notification, int delayMillis) {
+        Intent intent = new Intent(this, NotificationPublisher.class);
+        intent.putExtra(NotificationPublisher.NOTIFICATION, notification);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(
+                this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        scheduleIntent(pendingIntent, delayMillis);
+    }
+
+    private void scheduleNotification(int delayMillis) {
+        Intent intent = new Intent(this, NotificationPublisher.class);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(
+                this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        scheduleIntent(pendingIntent, delayMillis);
+    }
+
+    private void scheduleIntent(PendingIntent intent, int delayMillis) {
+        long futureInMillis = SystemClock.elapsedRealtime() + delayMillis;
+        AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+        alarmManager.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, futureInMillis, intent);
     }
 
     /**
