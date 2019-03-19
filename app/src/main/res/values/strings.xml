@@ -8,6 +8,9 @@
     <string name="pref_header_notifications">Notifications</string>
     <string name="pref_title_enable_notifications">Enable notifications</string>
 
-
     <string name="settings_button_text">Settings</string>
+
+    <!-- Strings related to notification channels -->
+    <string name="channel_name">All Notifications</string>
+    <string name="channel_description">All notifications</string>
 </resources>
