@@ -129,6 +129,16 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
         scheduleNotification(5000);
     }
 
+    private PendingIntent getNotificationPublisherIntent(Notification notification) {
+        Intent intent = new Intent(this, NotificationPublisher.class);
+        if (notification != null) {
+            intent.putExtra(NotificationPublisher.NOTIFICATION, notification);
+        }
+
+        return PendingIntent.getBroadcast(
+                this, REQUEST_CODE, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+    }
+
     private Notification buildNotification() {
         Intent intent = new Intent(this, com.example.notificationscheduler.MainActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
@@ -146,20 +156,11 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
     }
 
     private void scheduleNotification(Notification notification, int delayMillis) {
-        Intent intent = new Intent(this, NotificationPublisher.class);
-        intent.putExtra(NotificationPublisher.NOTIFICATION, notification);
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(
-                this, REQUEST_CODE, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-
-        scheduleIntent(pendingIntent, delayMillis);
+        scheduleIntent(getNotificationPublisherIntent(notification), delayMillis);
     }
 
     private void scheduleNotification(int delayMillis) {
-        Intent intent = new Intent(this, NotificationPublisher.class);
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(
-                this, REQUEST_CODE, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-
-        scheduleIntent(pendingIntent, delayMillis);
+        scheduleIntent(getNotificationPublisherIntent(null), delayMillis);
     }
 
     private void scheduleIntent(PendingIntent intent, int delayMillis) {
