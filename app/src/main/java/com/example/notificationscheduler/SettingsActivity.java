@@ -39,6 +39,10 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
 
     private static final String ENABLE_NOTIFICATIONS_PREF_KEY = "notifications_enable";
 
+    // This request code is used for all PendingIntents so that PendingIntents previously submitted
+    // to the AlarmManager can be looked up for cancellation or modification.
+    private static final int REQUEST_CODE = 0;
+
     /**
      * A preference value change listener that updates the preference's summary
      * to reflect its new value.
@@ -145,7 +149,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
         Intent intent = new Intent(this, NotificationPublisher.class);
         intent.putExtra(NotificationPublisher.NOTIFICATION, notification);
         PendingIntent pendingIntent = PendingIntent.getBroadcast(
-                this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+                this, REQUEST_CODE, intent, PendingIntent.FLAG_UPDATE_CURRENT);
 
         scheduleIntent(pendingIntent, delayMillis);
     }
@@ -153,7 +157,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
     private void scheduleNotification(int delayMillis) {
         Intent intent = new Intent(this, NotificationPublisher.class);
         PendingIntent pendingIntent = PendingIntent.getBroadcast(
-                this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+                this, REQUEST_CODE, intent, PendingIntent.FLAG_UPDATE_CURRENT);
 
         scheduleIntent(pendingIntent, delayMillis);
     }
