@@ -3,7 +3,7 @@
     <!-- A 'parent' preference, which enables/disables child preferences (below)
          when checked/unchecked. -->
     <SwitchPreference
-        android:defaultValue="true"
+        android:defaultValue="false"
         android:key="notifications_enable"
         android:title="@string/pref_title_enable_notifications" />
 
