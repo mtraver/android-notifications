@@ -120,6 +120,12 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
             return;
         }
 
+        // If the preference was changed to false then we should cancel any pending notifications.
+        if (!sharedPreferences.getBoolean(s, false)) {
+            cancelIntents();
+            return;
+        }
+
         // Build a notification, add it to the intent we'll schedule, and schedule it.
 //        Notification notification = buildNotification();
 //        scheduleNotification(notification, 5000);
@@ -147,7 +153,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setSmallIcon(R.drawable.ic_launcher_foreground)
                 .setContentTitle("Hello I'm a notification!")
-                .setContentText("Well look at that, it's content")
+                .setContentText("Well look at that, it's content 111")
                 .setContentIntent(pendingIntent)
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                 .setAutoCancel(true);
@@ -167,6 +173,11 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
         long futureInMillis = SystemClock.elapsedRealtime() + delayMillis;
         AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
         alarmManager.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, futureInMillis, intent);
+    }
+
+    private void cancelIntents() {
+        AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+        alarmManager.cancel(getNotificationPublisherIntent(null));
     }
 
     /**
