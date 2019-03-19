@@ -4,7 +4,7 @@
          when checked/unchecked. -->
     <SwitchPreference
         android:defaultValue="true"
-        android:key="notifications_new_message"
-        android:title="@string/pref_title_new_message_notifications" />
+        android:key="notifications_enable"
+        android:title="@string/pref_title_enable_notifications" />
 
 </PreferenceScreen>

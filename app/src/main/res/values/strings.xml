@@ -6,7 +6,7 @@
 
     <!-- Example settings for Notifications -->
     <string name="pref_header_notifications">Notifications</string>
-    <string name="pref_title_new_message_notifications">New message notifications</string>
+    <string name="pref_title_enable_notifications">Enable notifications</string>
 
 
     <string name="settings_button_text">Settings</string>
