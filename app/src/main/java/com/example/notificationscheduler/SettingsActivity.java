@@ -10,7 +10,6 @@ import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.SystemClock;
 import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
@@ -20,6 +19,7 @@ import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
 import android.view.MenuItem;
 
+import java.util.Calendar;
 import java.util.List;
 
 import static com.example.notificationscheduler.NotificationSchedulerApplication.CHANNEL_ID;
@@ -38,6 +38,7 @@ import static com.example.notificationscheduler.NotificationSchedulerApplication
 public class SettingsActivity extends AppCompatPreferenceActivity implements SharedPreferences.OnSharedPreferenceChangeListener {
 
     private static final String ENABLE_NOTIFICATIONS_PREF_KEY = "notifications_enable";
+    private static final String NOTIFICATION_TIME_PREF_KEY = "notifications_time";
 
     // This request code is used for all PendingIntents so that PendingIntents previously submitted
     // to the AlarmManager can be looked up for cancellation or modification.
@@ -117,24 +118,34 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
 
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String s) {
-        // We only want to take action if this particular preference changes.
-        if (!s.equals(ENABLE_NOTIFICATIONS_PREF_KEY)) {
+        // We only want to take action if these particular preferences change.
+        if (!s.equals(ENABLE_NOTIFICATIONS_PREF_KEY) && !s.equals(NOTIFICATION_TIME_PREF_KEY)) {
             return;
         }
 
         // If the preference was changed to false then we should cancel any pending notifications.
-        if (!sharedPreferences.getBoolean(s, false)) {
+        if (s.equals(ENABLE_NOTIFICATIONS_PREF_KEY) && !sharedPreferences.getBoolean(s, false)) {
             cancelIntents();
             return;
         }
 
+        // Get the time at which to schedule notifications.
+        Calendar startTime = TimePreference.valueToCalendar(
+                sharedPreferences.getInt(NOTIFICATION_TIME_PREF_KEY, 0));
+
+        // If the time has already passed today, start notifications tomorrow.
+        Calendar now = Calendar.getInstance();
+        if (now.after(startTime)) {
+            startTime.add(Calendar.DATE, 1);
+        }
+
         // Build a notification, add it to the intent we'll schedule, and schedule it.
 //        Notification notification = buildNotification();
-//        scheduleNotification(notification, 5000);
+//        scheduleNotification(notification, startTime);
 
         // Schedule an intent, and build and publish the notification in the future whenever
         // the intent is received.
-        scheduleNotification(5000);
+        scheduleNotification(startTime);
     }
 
     private PendingIntent getNotificationPublisherIntent(Notification notification) {
@@ -163,18 +174,18 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
         return builder.build();
     }
 
-    private void scheduleNotification(Notification notification, int delayMillis) {
-        scheduleIntent(getNotificationPublisherIntent(notification), delayMillis);
+    private void scheduleNotification(Notification notification, Calendar startTime) {
+        scheduleIntent(getNotificationPublisherIntent(notification), startTime);
     }
 
-    private void scheduleNotification(int delayMillis) {
-        scheduleIntent(getNotificationPublisherIntent(null), delayMillis);
+    private void scheduleNotification(Calendar startTime) {
+        scheduleIntent(getNotificationPublisherIntent(null), startTime);
     }
 
-    private void scheduleIntent(PendingIntent intent, int delayMillis) {
-        long futureInMillis = SystemClock.elapsedRealtime() + delayMillis;
+    private void scheduleIntent(PendingIntent intent, Calendar startTime) {
         AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-        alarmManager.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, futureInMillis, intent);
+        alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, startTime.getTimeInMillis(),
+                AlarmManager.INTERVAL_DAY, intent);
     }
 
     private void cancelIntents() {

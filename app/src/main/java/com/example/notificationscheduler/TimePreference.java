@@ -14,7 +14,7 @@ import java.util.Calendar;
 /**
  * TimePreference is a Preference that allows the user to choose a time value using a TimePicker
  * widget.
- *
+ * <p>
  * This class is based on those at https://stackoverflow.com/a/10608622/4308045 and
  * https://github.com/jakobulbrich/preferences-demo (see also
  * https://medium.com/@JakobUlbrich/building-a-settings-screen-for-android-part-3-ae9793fd31ec).
@@ -49,16 +49,20 @@ public class TimePreference extends DialogPreference {
      * valueToSummary takes the raw value of the preference and converts it into a human-readable
      * string fit for use in e.g. the preference's summary.
      *
-     * @param  value The raw value of the preference.
-     * @return       The time formatted according to the current settings (locale, 12/24 hour clock)
+     * @param value The raw value of the preference.
+     * @return The time formatted according to the current settings (locale, 12/24 hour clock)
      */
     public String valueToSummary(int value) {
+        return DateFormat.getTimeFormat(getContext()).format(valueToCalendar(value).getTime());
+    }
+
+    public static Calendar valueToCalendar(int value) {
         Calendar calendar = Calendar.getInstance();
         calendar.set(Calendar.HOUR_OF_DAY, getHours(value));
         calendar.set(Calendar.MINUTE, getMinutes(value));
         calendar.set(Calendar.SECOND, 0);
 
-        return DateFormat.getTimeFormat(getContext()).format(calendar.getTime());
+        return calendar;
     }
 
     private void setTime(int minAfterMidnight) {
@@ -67,11 +71,11 @@ public class TimePreference extends DialogPreference {
         notifyChanged();
     }
 
-    private int getHours(int minAfterMidnight) {
+    private static int getHours(int minAfterMidnight) {
         return minAfterMidnight / 60;
     }
 
-    private int getMinutes(int minAfterMidnight) {
+    private static int getMinutes(int minAfterMidnight) {
         return minAfterMidnight % 60;
     }
 
