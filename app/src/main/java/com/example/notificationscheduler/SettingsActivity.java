@@ -50,24 +50,23 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
     private static Preference.OnPreferenceChangeListener sBindPreferenceSummaryToValueListener = new Preference.OnPreferenceChangeListener() {
         @Override
         public boolean onPreferenceChange(Preference preference, Object value) {
-            String stringValue = value.toString();
-
             if (preference instanceof ListPreference) {
                 // For list preferences, look up the correct display value in
                 // the preference's 'entries' list.
                 ListPreference listPreference = (ListPreference) preference;
-                int index = listPreference.findIndexOfValue(stringValue);
+                int index = listPreference.findIndexOfValue(value.toString());
 
-                // Set the summary to reflect the new value.
                 preference.setSummary(
                         index >= 0
                                 ? listPreference.getEntries()[index]
                                 : null);
-
+            } else if (preference instanceof TimePreference) {
+                TimePreference timePreference = (TimePreference) preference;
+                preference.setSummary(timePreference.valueToSummary((int) value));
             } else {
                 // For all other preferences, set the summary to the value's
                 // simple string representation.
-                preference.setSummary(stringValue);
+                preference.setSummary(value.toString());
             }
             return true;
         }
@@ -92,15 +91,18 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
      * @see #sBindPreferenceSummaryToValueListener
      */
     private static void bindPreferenceSummaryToValue(Preference preference) {
-        // Set the listener to watch for value changes.
         preference.setOnPreferenceChangeListener(sBindPreferenceSummaryToValueListener);
 
-        // Trigger the listener immediately with the preference's
-        // current value.
-        sBindPreferenceSummaryToValueListener.onPreferenceChange(preference,
-                PreferenceManager
-                        .getDefaultSharedPreferences(preference.getContext())
-                        .getString(preference.getKey(), ""));
+        // Trigger the listener immediately with the preference's current value.
+        SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(
+                preference.getContext());
+        Object value;
+        if (preference instanceof TimePreference) {
+            value = sharedPrefs.getInt(preference.getKey(), 0);
+        } else {
+            value = sharedPrefs.getString(preference.getKey(), "");
+        }
+        sBindPreferenceSummaryToValueListener.onPreferenceChange(preference, value);
     }
 
     @Override
@@ -228,6 +230,10 @@ public class SettingsActivity extends AppCompatPreferenceActivity implements Sha
             super.onCreate(savedInstanceState);
             addPreferencesFromResource(R.xml.pref_notification);
             setHasOptionsMenu(true);
+
+            // Bind the summary of the TimePreference to its value. When the value changes, the
+            // summary is updated to reflect the new value, per the Android Design guidelines.
+            bindPreferenceSummaryToValue(findPreference("notifications_time"));
         }
 
         @Override

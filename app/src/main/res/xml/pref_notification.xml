@@ -7,4 +7,12 @@
         android:key="notifications_enable"
         android:title="@string/pref_title_enable_notifications" />
 
+    <!-- The time is stored as the number of minutes after midnight. The default value below is
+         07:00, i.e. 7 * 60 = 420 -->
+    <com.example.notificationscheduler.TimePreference
+        android:defaultValue="420"
+        android:key="notifications_time"
+        android:dependency="notifications_enable"
+        android:title="@string/pref_title_notification_time" />
+
 </PreferenceScreen>
